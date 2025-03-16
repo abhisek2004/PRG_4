@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(uuid())
+  name             String
+  email            String    @unique
+  password         String?
+  profileURL       String?
+  verifyCode       String?
+  verifyCodeExpiry DateTime?
+  isVerified       Boolean   @default(false)
+
+  codes Code[]
+  dailyActivities  DailyActivity[]
+}
+
+model Code {
+  id        String   @id @default(uuid())
+  fileName  String
+  code      String
+  language  String
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model ShareCode {
+  id       String @id @default(uuid())
+  code     String
+  language String
+}
+
+model DailyActivity {
+  id        String   @id @default(uuid())
+  date      DateTime @default(now()) @db.Date 
+  isActive  Boolean  @default(false) 
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date]) // Ensure one entry per user per day
+}
